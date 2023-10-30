@@ -1,0 +1,10 @@
+.idea/*
+.env
+NeuroGA-dev/
+notebooks/.ipynb_checkpoints/*
+reports/figures/lstm/*
+reports/figures/gru/*
+reports/figures/mlstm/*
+reports/figures/analytics/*
+reports/figures/positions/*
+*-checkpoint.ipynb
