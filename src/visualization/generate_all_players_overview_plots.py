@@ -18,7 +18,13 @@ group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument('--pso', dest='is_pso', action='store_true')
 group.add_argument('--nm', dest='is_pso', action='store_false')
 
+size_group = parser.add_mutually_exclusive_group(required=True)
+size_group.add_argument('--all', dest='use_all', action='store_true')
+size_group.add_argument('--limited', dest='use_all', action='store_false')
+
 is_pso = parser.parse_args().is_pso
+use_all = parser.parse_args().use_all
+
 source_path = PSO_FIG_DIR if is_pso else NELDER_MEAD_FIG_DIR
 source_name = 'pso' if is_pso else 'nm'
 folder_name = 'pso' if is_pso else 'nelder-mead'
@@ -29,14 +35,16 @@ pd.options.mode.chained_assignment = None
 
 data_holder = load_optimisation_data(is_dummy=USE_DUMMY)
 data_df = load_df_data()
-# player_games_df = data_df.groupby(['athlete', 'date']).agg({'date': 'first'}).groupby('athlete').agg(
-#     {'date': 'count'}).reset_index().rename(columns={'date': 'num_games'})
+player_games_df = data_df.groupby(['athlete', 'date']).agg({'date': 'first'}).groupby('athlete').agg(
+    {'date': 'count'}).reset_index().rename(columns={'date': 'num_games'})
 # max_games_per_player = player_games_df.num_games.max()
 data_df.loc[:, 'game_id'] = data_df.date.str.extract('(\d+)').astype(int)
-max_games_per_player = data_df.game_id.max()
+LIMITED_GAMES_CNT = 10
+max_games_per_player = data_df.game_id.max() if use_all else LIMITED_GAMES_CNT
 
-players_list = data_holder.get_players()
-players_list = players_list
+games_top5_players = player_games_df.sort_values('num_games', ascending=False).iloc[:5].sort_index().athlete.tolist()
+
+players_list = data_holder.get_players() if use_all else games_top5_players
 players_count = len(players_list)
 
 plt.rc('ytick', labelsize=4)
@@ -45,8 +53,9 @@ plt.rc('axes', labelsize=5)
 
 # GD chart is +1
 n_rows = players_count + 1
+wh_multiple = 1.0 if use_all else 2.0
 fig, axs = plt.subplots(
-    figsize=(0.6 * max_games_per_player, 0.6 * n_rows),
+    figsize=(0.6 * max_games_per_player * wh_multiple, 0.6 * n_rows * wh_multiple),
     nrows=n_rows,
     ncols=max_games_per_player,
     sharex='col',
@@ -57,10 +66,11 @@ gd_holder = {}
 for p_idx, player_name in enumerate(players_list):
     print(f'Processing player: {player_name} {p_idx + 1}/{players_count}')
     athlete_id = int(re.search('(\d+)', player_name).group(0))
-    athlete_idx = athlete_id - 1
+    athlete_idx = athlete_id - 1 if use_all else p_idx
 
+    athlete_label_position = (-65, 5) if use_all else (-32, 15)
     axs[athlete_idx][0].text(
-        -65, 5, s=player_name, fontsize=6, fontweight='bold', rotation=90
+        athlete_label_position[0], athlete_label_position[1], s=player_name, fontsize=6, fontweight='bold', rotation=90
     )
 
     player_data_holder = PlayerDataProcessor(player_name, data_holder.get_player_data(player_name))
@@ -77,6 +87,8 @@ for p_idx, player_name in enumerate(players_list):
     num_games = len(player_data_holder.player_measurements['values'])
     for i, game in enumerate(player_data_holder.player_measurements['values']):
         game_id = int(re.search('(\d+)', game['game_label']).group(0))
+        if not use_all and game_id > max_games_per_player:
+            continue
         game_idx = game_id - 1
 
         real_values = game['real_values'].cumsum()
@@ -169,7 +181,8 @@ for row_idx in range(plot_matrix.shape[0]):
 
 plt.tight_layout()
 plt.subplots_adjust(hspace=0.2, wspace=0)
+save_prefix = 'all' if use_all else 'top5'
 plt.savefig(
-    os.path.join(FIGURES_DIR, folder_name, f'{source_name}_all_players_overview_plot.png'),
+    os.path.join(FIGURES_DIR, folder_name, f'{source_name}_{save_prefix}_players_overview_plot.png'),
     dpi=300
 )
