@@ -24,10 +24,11 @@ for i, player_name in enumerate(players_list):
         minutes_per_gd.append(gd_df.duration_min.sum())
 
     load_plt_style()
-    fig = plt.figure(figsize=(8, 5.5))
+    fig, ax = plt.subplots(figsize=(8, 5.5))
+    plt.rcParams['axes.unicode_minus'] = True
     plt.title('Minutes per GD')
-    plt.bar(gd_states, minutes_per_gd)
-    plt.ylabel('Minutes cumulative')
-    plt.xlabel('GD')
+    ax.bar(gd_states, minutes_per_gd)
+    ax.set_ylabel('Minutes cumulative')
+    ax.set_xlabel('GD')
     fig.savefig(os.path.join(PLAYER_GD_MINUTES_DIR, f'{player_name}_player_score_minute.png'), dpi=300)
     plt.close()

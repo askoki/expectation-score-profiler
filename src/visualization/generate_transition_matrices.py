@@ -92,6 +92,7 @@ for i, player_name in enumerate(players_list):
     ax.set_xticks(np.arange(len(GD_STATES)), [f'GD{l}' for l in GD_STATES])
     ax.set_yticks([0, 1], ['f', 'nf'])
     add_labels_to_cm(ax, transition_matrix)
+    plt.rcParams['axes.unicode_minus'] = True
 
     fig.savefig(os.path.join(fig_path, f'{player_name}_matrix_{save_name}.png'), dpi=300)
     plt.close()
