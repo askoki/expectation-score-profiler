@@ -59,6 +59,7 @@ for i, player_name in enumerate(players_list):
     plt.rc('ytick', labelsize=12)
     plt.rc('xtick', labelsize=12)
     plt.rc('axes', labelsize=14)
+
     # Create a heatmap of the transition matrix
     fig, ax = plt.subplots(figsize=(5, 2.3))
     ax.grid(False)
@@ -89,10 +90,9 @@ for i, player_name in enumerate(players_list):
         cbar.set_label('Transition Probability', rotation=270, labelpad=20)
 
     # Add labels to axes
-    ax.set_xticks(np.arange(len(GD_STATES)), [f'GD{l}' for l in GD_STATES])
+    ax.set_xticks(np.arange(len(GD_STATES)), [f'GD$-${abs(l)}' if l < 0 else f'GD{l}' for l in GD_STATES])
     ax.set_yticks([0, 1], ['f', 'nf'])
     add_labels_to_cm(ax, transition_matrix)
-    plt.rcParams['axes.unicode_minus'] = True
 
     fig.savefig(os.path.join(fig_path, f'{player_name}_matrix_{save_name}.png'), dpi=300)
     plt.close()
